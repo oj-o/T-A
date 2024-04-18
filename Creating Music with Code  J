@@ -1,0 +1,30 @@
+import librosa
+import pretty_midi
+import pydub
+import numpy as np
+import os
+from pydub import AudioSegment
+
+animation_music_file = 'animation_music.wav'
+y, sr = librosa.load(animation_music_file, sr=44100)
+
+pitches, magnitudes = librosa.piptrack(y=y, sr=sr)
+onset_env = librosa.onset.onset_strength(y, sr=sr)
+tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr)
+
+
+new_music = pretty_midi.PrettyMIDI()
+instrument = pretty_midi.Instrument(program=0)
+
+for i in range(len(beat_frames)):
+    start = beat_frames[i] / sr
+    end = (beat_frames[i+1] if i+1 < len(beat_frames) else len(y)/sr) / sr
+    pitch = np.random.uniform(50, 80)
+    velocity = np.random.uniform(64, 127)
+    instrument.notes.append(pretty_midi.Note(
+        start=start, end=end, pitch=int(pitch), velocity=int(velocity)))
+
+new_music.instruments.append(instrument)
+
+midi_data = new_music.fluidsynth(fs=44100)
+pydub.AudioSegment(midi_data.tobytes(), frame_rate=44100, sample_width=2, channels=2).export('new_animation_music.wav', format='wav')

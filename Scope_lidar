@@ -1,0 +1,59 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+
+# 실제 장비 연결을 위한 라이브러리 (실제 사용 시 주석 해제)
+# import pyvisa
+# import serial
+
+# -----------------------------
+# 오실로스코프 연결 (예시)
+# -----------------------------
+# rm = pyvisa.ResourceManager()
+# oscilloscope = rm.open_resource('USB0::0x0699::0x0363::C000000::INSTR')  # 예시 주소
+
+# -----------------------------
+# 라이다 센서 연결 (예시)
+# -----------------------------
+# lidar = serial.Serial('COM3', 115200, timeout=1)  # Windows의 경우; Linux는 '/dev/ttyUSB0' 등
+
+# 시각화를 위한 기본 설정
+fig, ax = plt.subplots()
+line, = ax.plot([], [], lw=2, label='Oscilloscope Waveform')
+scat = ax.scatter([], [], s=100, c='red', label='LiDAR Data')
+
+ax.set_xlim(0, 1000)
+ax.set_ylim(-2, 2)
+ax.set_title("예술-기술 상호작용")
+ax.set_xlabel("시간 (샘플)")
+ax.set_ylabel("신호 진폭")
+ax.legend(loc='upper right')
+
+def init():
+    line.set_data([], [])
+    scat.set_offsets([[500, 0]])
+    return line, scat
+
+def animate(frame):
+    # 오실로스코프 데이터 읽기 (실제 사용 시, oscilloscope.query_binary_values() 등 사용)
+    # 예제에서는 sine wave를 시뮬레이션 데이터로 사용합니다.
+    x = np.linspace(0, 1000, 1000)
+    # 파형의 주파수를 frame에 따라 미세하게 변화시켜 동적인 효과 표현
+    y = np.sin(2 * np.pi * (0.005 + frame/10000) * x)
+    line.set_data(x, y)
+    
+    # 라이다 센서 데이터 읽기 (실제 사용 시, lidar.readline() 등을 활용)
+    # 예제에서는 거리 값을 시뮬레이션: 주기적으로 50cm ~ 150cm 사이 값을 변동
+    # 실제 값은 센서에서 읽은 문자열을 float형으로 변환하여 사용합니다.
+    simulated_distance = 100 + 50 * np.sin(2 * np.pi * frame/50)
+    
+    # 라이다 데이터를 활용하여 중심에 원의 크기를 변화시킵니다.
+    # 예: 거리가 가까울수록 원의 크기가 커짐
+    circle_size = max(10, 500 / (simulated_distance + 1))
+    scat.set_offsets([[500, 0]])
+    scat.set_sizes([circle_size])
+    
+    return line, scat
+
+ani = animation.FuncAnimation(fig, animate, init_func=init, frames=200, interval=50, blit=True)
+plt.show()
